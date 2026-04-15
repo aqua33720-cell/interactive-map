@@ -2,19 +2,19 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Zoom Map</title>
+  <title>Interactive Map</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
     }
 
-    #map {
+    #container {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      position: relative;
       touch-action: none;
+      cursor: grab;
     }
 
     img {
@@ -28,71 +28,79 @@
 
 <body>
 
-<div id="map">
-  <img src="Drusilla's_Map.png">
+<div id="container">
+  <img id="map" src="Drusilla's_Map.png">
 </div>
 
 <script>
 let scale = 1;
-let posX = 0;
-let posY = 0;
+let x = 0;
+let y = 0;
 let startX, startY;
-let isDragging = false;
+let dragging = false;
 
-const img = document.getElementById("mapImage");
+const map = document.getElementById("map");
+const container = document.getElementById("container");
 
-// ZOOM with mouse wheel
-document.addEventListener("wheel", (e) => {
+// 🖱️ MOUSE ZOOM
+container.addEventListener("wheel", (e) => {
   e.preventDefault();
-  scale += e.deltaY * -0.001;
+
+  const zoomSpeed = 0.001;
+  scale += e.deltaY * -zoomSpeed;
+
   scale = Math.min(Math.max(1, scale), 4);
-  updateTransform();
+
+  update();
 });
 
-// DRAG to pan
-document.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  startX = e.clientX - posX;
-  startY = e.clientY - posY;
+// 🖱️ DRAG TO PAN
+container.addEventListener("mousedown", (e) => {
+  dragging = true;
+  container.style.cursor = "grabbing";
+  startX = e.clientX - x;
+  startY = e.clientY - y;
 });
 
-document.addEventListener("mouseup", () => {
-  isDragging = false;
+container.addEventListener("mouseup", () => {
+  dragging = false;
+  container.style.cursor = "grab";
 });
 
-document.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
-  posX = e.clientX - startX;
-  posY = e.clientY - startY;
-  updateTransform();
+container.addEventListener("mouseleave", () => {
+  dragging = false;
+  container.style.cursor = "grab";
 });
 
-// TOUCH support (mobile)
-document.addEventListener("touchstart", (e) => {
-  isDragging = true;
-  startX = e.touches[0].clientX - posX;
-  startY = e.touches[0].clientY - posY;
+container.addEventListener("mousemove", (e) => {
+  if (!dragging) return;
+
+  x = e.clientX - startX;
+  y = e.clientY - startY;
+
+  update();
 });
 
-document.addEventListener("touchend", () => {
-  isDragging = false;
+// 📱 TOUCH PAN
+container.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX - x;
+  startY = e.touches[0].clientY - y;
 });
 
-document.addEventListener("touchmove", (e) => {
-  if (!isDragging) return;
-  posX = e.touches[0].clientX - startX;
-  posY = e.touches[0].clientY - startY;
-  updateTransform();
+container.addEventListener("touchmove", (e) => {
+  x = e.touches[0].clientX - startX;
+  y = e.touches[0].clientY - startY;
+  update();
 });
 
-function updateTransform() {
-  img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+// 🔄 APPLY TRANSFORM
+function update() {
+  map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 </script>
 
 </body>
 </html>
-
 
   
 
