@@ -8,15 +8,14 @@
     body {
       margin: 0;
       overflow: hidden;
-      font-family: Arial;
     }
 
     #container {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      touch-action: none;
       position: relative;
+      touch-action: none;
       cursor: grab;
     }
 
@@ -27,7 +26,6 @@
       pointer-events: none;
     }
 
-    /* Zoom buttons */
     .controls {
       position: absolute;
       top: 10px;
@@ -43,7 +41,6 @@
       border: none;
       background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -53,7 +50,6 @@
 <div id="container">
   <img id="map" src="Drusilla's_Map.png">
 
-  <!-- Zoom Controls -->
   <div class="controls">
     <button onclick="zoomIn()">+</button>
     <button onclick="zoomOut()">−</button>
@@ -70,20 +66,18 @@ let dragging = false;
 const map = document.getElementById("map");
 const container = document.getElementById("container");
 
-// 🔍 ZOOM BUTTONS
+// 🔍 ZOOM
 function zoomIn() {
-  scale += 0.2;
-  scale = Math.min(scale, 4);
-  update();
+  scale = Math.min(scale + 0.2, 4);
+  applyBounds();
 }
 
 function zoomOut() {
-  scale -= 0.2;
-  scale = Math.max(scale, 1);
-  update();
+  scale = Math.max(scale - 0.2, 1);
+  applyBounds();
 }
 
-// 🖱️ DRAG TO PAN
+// 🖱️ DRAG
 container.addEventListener("mousedown", (e) => {
   dragging = true;
   startX = e.clientX - x;
@@ -97,10 +91,10 @@ container.addEventListener("mousemove", (e) => {
   if (!dragging) return;
   x = e.clientX - startX;
   y = e.clientY - startY;
-  update();
+  applyBounds();
 });
 
-// 📱 TOUCH PAN
+// 📱 TOUCH
 container.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX - x;
   startY = e.touches[0].clientY - y;
@@ -109,15 +103,42 @@ container.addEventListener("touchstart", (e) => {
 container.addEventListener("touchmove", (e) => {
   x = e.touches[0].clientX - startX;
   y = e.touches[0].clientY - startY;
-  update();
+  applyBounds();
 });
+
+// 🚧 BOUNDARY LOGIC
+function applyBounds() {
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+
+  const mapWidth = map.clientWidth * scale;
+  const mapHeight = map.clientHeight * scale;
+
+  // Limit X
+  if (mapWidth > containerWidth) {
+    x = Math.min(0, Math.max(x, containerWidth - mapWidth));
+  } else {
+    x = (containerWidth - mapWidth) / 2;
+  }
+
+  // Limit Y
+  if (mapHeight > containerHeight) {
+    y = Math.min(0, Math.max(y, containerHeight - mapHeight));
+  } else {
+    y = (containerHeight - mapHeight) / 2;
+  }
+
+  update();
+}
 
 // 🔄 APPLY TRANSFORM
 function update() {
   map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
+
+// Run once on load
+window.onload = applyBounds;
 </script>
 
 </body>
 </html>
-
