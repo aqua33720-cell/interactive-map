@@ -51,8 +51,8 @@
   <img id="map" src="Drusilla's_Map.png">
 
   <div class="controls">
-    <button onclick="zoomIn()">+</button>
-    <button onclick="zoomOut()">−</button>
+  <button onclick="zoomIn()" onmousedown="event.stopPropagation()">+</button>
+<button onclick="zoomOut()" onmousedown="event.stopPropagation()">−</button>
   </div>
 </div>
 
@@ -79,12 +79,17 @@ function zoomOut() {
 
 // 🖱️ DRAG
 container.addEventListener("mousedown", (e) => {
+  // Ignore clicks on buttons
+  if (e.target.tagName === "BUTTON") return;
+
   dragging = true;
   startX = e.clientX - x;
   startY = e.clientY - y;
 });
 
-container.addEventListener("mouseup", () => dragging = false);
+document.addEventListener("mouseup", () => {
+  dragging = false;
+});
 container.addEventListener("mouseleave", () => dragging = false);
 
 container.addEventListener("mousemove", (e) => {
