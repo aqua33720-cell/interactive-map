@@ -64,15 +64,26 @@
 <script>
 function update() {
   const containerRect = container.getBoundingClientRect();
-  const imgWidth = map.offsetWidth * scale;
-  const imgHeight = map.offsetHeight * scale;
 
-  const maxX = 0;
-  const maxY = 0;
-  const minX = containerRect.width - imgWidth;
-  const minY = containerRect.height - imgHeight;
+  const imgWidth = map.naturalWidth * scale;
+  const imgHeight = map.naturalHeight * scale;
 
-  // Clamp values
+  let minX = containerRect.width - imgWidth;
+  let minY = containerRect.height - imgHeight;
+
+  let maxX = 0;
+  let maxY = 0;
+
+  // If image is smaller than container → center it
+  if (imgWidth < containerRect.width) {
+    minX = maxX = (containerRect.width - imgWidth) / 2;
+  }
+
+  if (imgHeight < containerRect.height) {
+    minY = maxY = (containerRect.height - imgHeight) / 2;
+  }
+
+  // Clamp position
   x = Math.min(maxX, Math.max(minX, x));
   y = Math.min(maxY, Math.max(minY, y));
 
