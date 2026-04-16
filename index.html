@@ -1,120 +1,49 @@
-<!DOCTYPE html>
-<html>
+
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Map - Enhanced</title>
+  <title>Interactive Map</title>
 
   <style>
     body {
       margin: 0;
       overflow: hidden;
+      font-family: Arial;
     }
 
     #container {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      position: relative;
       touch-action: none;
+      position: relative;
       cursor: grab;
     }
 
     img {
+      width: 200%;
       width: 100%;
       transform-origin: 0 0;
       user-select: none;
       pointer-events: none;
     }
 
+    /* Zoom buttons */
     .controls {
       position: absolute;
       top: 10px;
-      left: 10px;
+      right: 10px;
       z-index: 10;
-      background: rgba(0,0,0,0.6);
-      padding: 8px;
-      border-radius: 12px;
-      backdrop-filter: blur(4px);
     }
 
     button {
       display: block;
       margin: 5px;
-      padding: 10px 15px;
+      padding: 10px;
       font-size: 18px;
       border: none;
       background: white;
       border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #ddd;
-    }
-
-    .enhance-panel {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 10;
-      background: rgba(0,0,0,0.7);
-      padding: 12px;
-      border-radius: 12px;
-      backdrop-filter: blur(4px);
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 160px;
-    }
-
-    .enhance-panel label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .enhance-panel input {
-      width: 100px;
-      cursor: pointer;
-    }
-
-    .enhance-panel button {
-      margin: 0;
-      padding: 6px 10px;
-      font-size: 12px;
-      display: inline-block;
-      background: #4CAF50;
-      color: white;
-    }
-
-    .enhance-panel button.reset-btn {
-      background: #f44336;
-    }
-
-    .enhance-panel .note {
-      font-size: 10px;
-      opacity: 0.7;
-      text-align: center;
-      margin-top: 5px;
-    }
-
-    .status {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 12px;
-      z-index: 10;
-      pointer-events: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -123,303 +52,71 @@
 
 <div id="container">
   <img id="map" src="Drusilla's_Map.png">
+  <img id="map" src="your-map.png">
 
+  <!-- Zoom Controls -->
   <div class="controls">
-    <button onclick="zoomIn()" onmousedown="event.stopPropagation()">+</button>
-    <button onclick="zoomOut()" onmousedown="event.stopPropagation()">−</button>
+    <button onclick="zoomIn()">+</button>
+    <button onclick="zoomOut()">−</button>
   </div>
-
-  <div class="enhance-panel">
-    <strong>🔍 Image Enhancement</strong>
-    <label>
-      Sharpness:
-      <input type="range" id="sharpnessSlider" min="0" max="2" step="0.01" value="0">
-    </label>
-    <label>
-      Contrast:
-      <input type="range" id="contrastSlider" min="0.5" max="2" step="0.01" value="1">
-    </label>
-    <label>
-      Brightness:
-      <input type="range" id="brightnessSlider" min="0.5" max="2" step="0.01" value="1">
-    </label>
-    <button id="applyEnhanceBtn">✨ Apply Enhancement</button>
-    <button id="resetEnhanceBtn" class="reset-btn">↺ Reset</button>
-    <div class="note">💡 Tip: Right-click image → "Save as" to save enhanced version</div>
-  </div>
-
-  <div class="status" id="status">Scale: 1.0x | Filters: None</div>
 </div>
 
 <script>
-let scale = 1;
-let x = 0;
-let y = 0;
-let startX, startY;
-let dragging = false;
-
+@@ -42,42 +70,33 @@
 const map = document.getElementById("map");
 const container = document.getElementById("container");
-const statusDiv = document.getElementById("status");
 
-// Store original image source
-let originalSrc = "Drusilla's_Map.png";
-let currentFilters = {
-  sharpness: 0,
-  contrast: 1,
-  brightness: 1
-};
+// 🖱️ MOUSE ZOOM
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
 
-// 🔍 ZOOM
+  const zoomSpeed = 0.001;
+  scale += e.deltaY * -zoomSpeed;
+
+  scale = Math.min(Math.max(1, scale), 4);
+// 🔍 ZOOM BUTTONS
 function zoomIn() {
-  scale = Math.min(scale + 0.2, 4);
-  applyBounds();
-  updateStatus();
+  scale += 0.2;
+  scale = Math.min(scale, 4);
+  update();
 }
 
 function zoomOut() {
-  scale = Math.max(scale - 0.2, 1);
-  applyBounds();
-  updateStatus();
+  scale -= 0.2;
+  scale = Math.max(scale, 1);
+  update();
+});
 }
 
-// 🖱️ DRAG
+// 🖱️ DRAG TO PAN
 container.addEventListener("mousedown", (e) => {
-  if (e.target.tagName === "BUTTON") return;
   dragging = true;
+  container.style.cursor = "grabbing";
   startX = e.clientX - x;
   startY = e.clientY - y;
 });
 
-document.addEventListener("mouseup", () => {
+container.addEventListener("mouseup", () => {
   dragging = false;
+  container.style.cursor = "grab";
 });
+
+container.addEventListener("mouseleave", () => {
+  dragging = false;
+  container.style.cursor = "grab";
+});
+container.addEventListener("mouseup", () => dragging = false);
 container.addEventListener("mouseleave", () => dragging = false);
 
 container.addEventListener("mousemove", (e) => {
   if (!dragging) return;
+
   x = e.clientX - startX;
   y = e.clientY - startY;
-  applyBounds();
-});
-
-// 📱 TOUCH
-container.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX - x;
-  startY = e.touches[0].clientY - y;
-});
-
-container.addEventListener("touchmove", (e) => {
-  x = e.touches[0].clientX - startX;
-  y = e.touches[0].clientY - startY;
-  applyBounds();
-});
-
-// 🚧 BOUNDARY LOGIC
-function applyBounds() {
-  const containerWidth = container.clientWidth;
-  const containerHeight = container.clientHeight;
-
-  const mapWidth = map.clientWidth * scale;
-  const mapHeight = map.clientHeight * scale;
-
-  if (mapWidth > containerWidth) {
-    x = Math.min(0, Math.max(x, containerWidth - mapWidth));
-  } else {
-    x = (containerWidth - mapWidth) / 2;
-  }
-
-  if (mapHeight > containerHeight) {
-    y = Math.min(0, Math.max(y, containerHeight - mapHeight));
-  } else {
-    y = (containerHeight - mapHeight) / 2;
-  }
 
   update();
-}
+});
 
-// 🔄 APPLY TRANSFORM
-function update() {
-  map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-}
-
-function updateStatus() {
-  let filterText = [];
-  if (currentFilters.sharpness > 0.01) filterText.push(`Sharp +${currentFilters.sharpness.toFixed(2)}`);
-  if (Math.abs(currentFilters.contrast - 1) > 0.01) filterText.push(`Contrast ${currentFilters.contrast.toFixed(2)}x`);
-  if (Math.abs(currentFilters.brightness - 1) > 0.01) filterText.push(`Bright ${currentFilters.brightness.toFixed(2)}x`);
-  
-  let filterDisplay = filterText.length ? filterText.join(", ") : "None";
-  statusDiv.innerHTML = `Scale: ${scale.toFixed(1)}x | Filters: ${filterDisplay}`;
-}
-
-// 🎨 IMAGE ENHANCEMENT - Creates higher perceived resolution
-function applyImageEnhancement() {
-  const sharpness = parseFloat(document.getElementById("sharpnessSlider").value);
-  const contrast = parseFloat(document.getElementById("contrastSlider").value);
-  const brightness = parseFloat(document.getElementById("brightnessSlider").value);
-  
-  currentFilters = { sharpness, contrast, brightness };
-  
-  // Create a canvas to process the image
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  
-  const img = new Image();
-  img.crossOrigin = "Anonymous";
-  
-  // Show loading indicator
-  statusDiv.innerHTML = "Processing image...";
-  
-  img.onload = function() {
-    // Set canvas to image dimensions
-    canvas.width = img.width;
-    canvas.height = img.height;
-    
-    // Draw original image
-    ctx.drawImage(img, 0, 0);
-    
-    // Get pixel data
-    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let data = imageData.data;
-    
-    // Apply brightness and contrast first
-    for (let i = 0; i < data.length; i += 4) {
-      // Apply brightness
-      let r = data[i] * brightness;
-      let g = data[i+1] * brightness;
-      let b = data[i+2] * brightness;
-      
-      // Apply contrast: (value - 128) * contrast + 128
-      r = (r - 128) * contrast + 128;
-      g = (g - 128) * contrast + 128;
-      b = (b - 128) * contrast + 128;
-      
-      // Clamp values
-      data[i] = Math.min(255, Math.max(0, r));
-      data[i+1] = Math.min(255, Math.max(0, g));
-      data[i+2] = Math.min(255, Math.max(0, b));
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-    
-    // Apply sharpening (unsharp mask effect)
-    if (sharpness > 0.01) {
-      const sharpenedData = applySharpening(ctx, canvas.width, canvas.height, sharpness);
-      ctx.putImageData(sharpenedData, 0, 0);
-    }
-    
-    // Convert canvas to data URL and set as image source
-    const enhancedSrc = canvas.toDataURL("image/png");
-    map.src = enhancedSrc;
-    
-    // Wait for new image to load, then reset transform
-    setTimeout(() => {
-      applyBounds();
-      updateStatus();
-    }, 100);
-  };
-  
-  img.onerror = function() {
-    statusDiv.innerHTML = "Error processing image. Check file exists.";
-  };
-  
-  img.src = originalSrc;
-}
-
-// Sharpening filter (Unsharp Mask)
-function applySharpening(ctx, width, height, amount) {
-  // Get original image data
-  const originalData = ctx.getImageData(0, 0, width, height);
-  const data = originalData.data;
-  
-  // Create a blurred version (simple box blur)
-  const blurred = ctx.getImageData(0, 0, width, height);
-  const blurData = blurred.data;
-  
-  // Simple 3x3 box blur
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      let idx = (y * width + x) * 4;
-      let r = 0, g = 0, b = 0;
-      let count = 0;
-      
-      for (let ky = -1; ky <= 1; ky++) {
-        for (let kx = -1; kx <= 1; kx++) {
-          let nidx = ((y + ky) * width + (x + kx)) * 4;
-          r += data[nidx];
-          g += data[nidx + 1];
-          b += data[nidx + 2];
-          count++;
-        }
-      }
-      
-      blurData[idx] = r / count;
-      blurData[idx + 1] = g / count;
-      blurData[idx + 2] = b / count;
-    }
-  }
-  
-  // Unsharp mask: original + amount * (original - blurred)
-  for (let i = 0; i < data.length; i += 4) {
-    let r = data[i] + amount * (data[i] - blurData[i]);
-    let g = data[i+1] + amount * (data[i+1] - blurData[i+1]);
-    let b = data[i+2] + amount * (data[i+2] - blurData[i+2]);
-    
-    data[i] = Math.min(255, Math.max(0, r));
-    data[i+1] = Math.min(255, Math.max(0, g));
-    data[i+2] = Math.min(255, Math.max(0, b));
-  }
-  
-  return originalData;
-}
-
-// Reset all enhancements
-function resetEnhancement() {
-  document.getElementById("sharpnessSlider").value = 0;
-  document.getElementById("contrastSlider").value = 1;
-  document.getElementById("brightnessSlider").value = 1;
-  
-  currentFilters = { sharpness: 0, contrast: 1, brightness: 1 };
-  map.src = originalSrc;
-  
-  setTimeout(() => {
-    applyBounds();
-    updateStatus();
-  }, 100);
-}
-
-// Event listeners for enhancement buttons
-document.getElementById("applyEnhanceBtn").addEventListener("click", applyImageEnhancement);
-document.getElementById("resetEnhanceBtn").addEventListener("click", resetEnhancement);
-
-// Also apply on slider release for real-time preview (optional)
-let previewTimeout;
-function realtimePreview() {
-  clearTimeout(previewTimeout);
-  previewTimeout = setTimeout(() => {
-    applyImageEnhancement();
-  }, 300);
-}
-
-document.getElementById("sharpnessSlider").addEventListener("change", realtimePreview);
-document.getElementById("contrastSlider").addEventListener("change", realtimePreview);
-document.getElementById("brightnessSlider").addEventListener("change", realtimePreview);
-
-// Initialize
-map.onload = function() {
-  applyBounds();
-  updateStatus();
-};
-
-// Handle window resize
-window.addEventListener("resize", () => applyBounds());
-</script>
-
-</body>
-</html>
-window.onload = applyBounds;
-</script>
 
 </body>
 </html>
