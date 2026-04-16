@@ -62,11 +62,23 @@
 </div>
 
 <script>
-
 const map = document.getElementById("map");
 const container = document.getElementById("container");
 
-// 🖱️ MOUSE ZOOM
+let scale = 1;
+let x = 0;
+let y = 0;
+
+let dragging = false;
+let startX = 0;
+let startY = 0;
+
+// Apply transform
+function update() {
+  map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+// 🖱️ MOUSE WHEEL ZOOM
 container.addEventListener("wheel", (e) => {
   e.preventDefault();
 
@@ -74,24 +86,26 @@ container.addEventListener("wheel", (e) => {
   scale += e.deltaY * -zoomSpeed;
 
   scale = Math.min(Math.max(1, scale), 4);
-// 🔍 ZOOM BUTTONS
+
+  update();
+});
+
+// 🔍 BUTTON ZOOM
 function zoomIn() {
-  scale += 0.2;
-  scale = Math.min(scale, 4);
+  scale = Math.min(scale + 0.2, 4);
   update();
 }
 
 function zoomOut() {
-  scale -= 0.2;
-  scale = Math.max(scale, 1);
+  scale = Math.max(scale - 0.2, 1);
   update();
-});
 }
 
-// 🖱️ DRAG TO PAN
+// 🖱️ DRAG PAN
 container.addEventListener("mousedown", (e) => {
   dragging = true;
   container.style.cursor = "grabbing";
+
   startX = e.clientX - x;
   startY = e.clientY - y;
 });
@@ -105,8 +119,6 @@ container.addEventListener("mouseleave", () => {
   dragging = false;
   container.style.cursor = "grab";
 });
-container.addEventListener("mouseup", () => dragging = false);
-container.addEventListener("mouseleave", () => dragging = false);
 
 container.addEventListener("mousemove", (e) => {
   if (!dragging) return;
@@ -116,7 +128,6 @@ container.addEventListener("mousemove", (e) => {
 
   update();
 });
-
-
+</script>
 </body>
 </html>
