@@ -62,33 +62,43 @@
 </div>
 
 <script>
-function update() {
-  const containerRect = container.getBoundingClientRect();
-
-  const imgWidth = map.naturalWidth * scale;
-  const imgHeight = map.naturalHeight * scale;
-
-  let minX = containerRect.width - imgWidth;
-  let minY = containerRect.height - imgHeight;
-
-  let maxX = 0;
-  let maxY = 0;
-
-  // If image is smaller than container → center it
-  if (imgWidth < containerRect.width) {
-    minX = maxX = (containerRect.width - imgWidth) / 2;
-  }
-
-  if (imgHeight < containerRect.height) {
-    minY = maxY = (containerRect.height - imgHeight) / 2;
-  }
-
-  // Clamp position
-  x = Math.min(maxX, Math.max(minX, x));
-  y = Math.min(maxY, Math.max(minY, y));
-
-  map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  @@ -42,42 +70,33 @@
+    const map = document.getElementById("map"); 
+  const container = document.getElementById("container"); 
+  // 🖱️ MOUSE ZOOM 
+  container.addEventListener("wheel", (e) => { e.preventDefault(); 
+  const zoomSpeed = 0.001; scale += e.deltaY * -zoomSpeed; 
+  scale = Math.min(Math.max(1, scale), 4);
+// 🔍 ZOOM BUTTONS
+function zoomIn() { scale += 0.2; scale = Math.min(scale, 4); 
+update();
 }
+function zoomOut() 
+{ scale -= 0.2; 
+ scale = Math.max(scale, 1); 
+ update(); 
+});
+} 
+// 🖱️ DRAG TO PAN
+container.addEventListener("mousedown", (e) => { 
+  dragging = true; 
+  container.style.cursor = "grabbing";
+  startX = e.clientX - x; 
+  startY = e.clientY - y; }); 
+  container.addEventListener("mouseup", () => { 
+    dragging = false; container.style.cursor = "grab"; 
+  }); 
+  container.addEventListener("mouseleave", () => { 
+    dragging = false; container.style.cursor = "grab"; 
+  });
+  container.addEventListener("mouseup", () => dragging = false); 
+  container.addEventListener("mouseleave", () => dragging = false); 
+  container.addEventListener("mousemove", (e) => { 
+    if (!dragging) return;
+    x = e.clientX - startX;
+    y = e.clientY - startY; 
+    update();
+  });
 </script>
 </body>
 </html>
