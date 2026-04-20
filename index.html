@@ -1,104 +1,33 @@
 
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Map</title>
-
+  <title>Simple Map</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
-      font-family: Arial;
     }
 
-    #container {
-      width: 100vw;
+    .map {
+      width: 100%;
       height: 100vh;
-      overflow: hidden;
-      touch-action: none;
-      position: relative;
-      cursor: grab;
+      overflow: auto; /* enables scrolling (pan) */
     }
 
     img {
-      width: 200%;
-      width: 100%;
-      transform-origin: 0 0;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    /* Zoom buttons */
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-    }
-
-    button {
+      width: 1500px; /* make bigger than screen so you can scroll */
       display: block;
-      margin: 5px;
-      padding: 10px;
-      font-size: 18px;
-      border: none;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 
 <body>
 
-<div id="container">
-  <img id="map" src="Drusilla's_Map.png">
-
-
-  <!-- Zoom Controls -->
-  <div class="controls">
-    <button onclick="zoomIn()">+</button>
-    <button onclick="zoomOut()">−</button>
-  </div>
+<div class="map">
+  
+  <img src="Drusilla's_Map.png">
 </div>
 
-<script>
-
-    const map = document.getElementById("map"); 
-  const container = document.getElementById("container"); 
-  // 🖱️ MOUSE ZOOM 
-  container.addEventListener("wheel", (e) => { e.preventDefault(); 
-  const zoomSpeed = 0.001; scale += e.deltaY * -zoomSpeed; 
-  scale = Math.min(Math.max(1, scale), 4);
-// 🔍 ZOOM BUTTONS
-function zoomIn() { scale += 0.2; scale = Math.min(scale, 4); 
-update();
-}
-function zoomOut() 
-{ scale -= 0.2; 
- scale = Math.max(scale, 1); 
- update(); 
-});
-} 
-// 🖱️ DRAG TO PAN
-container.addEventListener("mousedown", (e) => { 
-  dragging = true; 
-  container.style.cursor = "grabbing";
-  startX = e.clientX - x; 
-  startY = e.clientY - y; }); 
-  container.addEventListener("mouseup", () => { 
-    dragging = false; container.style.cursor = "grab"; 
-  }); 
-  container.addEventListener("mouseleave", () => { 
-    dragging = false; container.style.cursor = "grab"; 
-  });
-  container.addEventListener("mouseup", () => dragging = false); 
-  container.addEventListener("mouseleave", () => dragging = false); 
-  container.addEventListener("mousemove", (e) => { 
-    if (!dragging) return;
-    x = e.clientX - startX;
-    y = e.clientY - startY; 
-    update();
-  });
-</script>
 </body>
 </html>
