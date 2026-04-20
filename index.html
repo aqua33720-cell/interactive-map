@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Interactive Map</title>
+
   <style>
     body {
       margin: 0;
@@ -13,6 +14,7 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
+      position: relative;
       touch-action: none;
       cursor: grab;
     }
@@ -23,13 +25,35 @@
       user-select: none;
       pointer-events: none;
     }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    button {
+      display: block;
+      margin: 5px;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      background: white;
+      border-radius: 8px;
+    }
   </style>
 </head>
 
 <body>
 
 <div id="container">
-  <img id="map" src="Drusilla's_Map.png">
+  <img id="map" src="your-map.png">
+
+  <div class="controls">
+    <button onclick="zoomIn()">+</button>
+    <button onclick="zoomOut()">−</button>
+  </div>
 </div>
 
 <script>
@@ -42,46 +66,35 @@ let dragging = false;
 const map = document.getElementById("map");
 const container = document.getElementById("container");
 
-// 🖱️ MOUSE ZOOM
-container.addEventListener("wheel", (e) => {
-  e.preventDefault();
+// 🔍 ZOOM
+function zoomIn() {
+  scale = Math.min(scale + 0.2, 4);
+  applyBounds();
+}
 
-  const zoomSpeed = 0.001;
-  scale += e.deltaY * -zoomSpeed;
+function zoomOut() {
+  scale = Math.max(scale - 0.2, 1);
+  applyBounds();
+}
 
-  scale = Math.min(Math.max(1, scale), 4);
-
-  update();
-});
-
-// 🖱️ DRAG TO PAN
+// 🖱️ DRAG
 container.addEventListener("mousedown", (e) => {
   dragging = true;
-  container.style.cursor = "grabbing";
   startX = e.clientX - x;
   startY = e.clientY - y;
 });
 
-container.addEventListener("mouseup", () => {
-  dragging = false;
-  container.style.cursor = "grab";
-});
-
-container.addEventListener("mouseleave", () => {
-  dragging = false;
-  container.style.cursor = "grab";
-});
+container.addEventListener("mouseup", () => dragging = false);
+container.addEventListener("mouseleave", () => dragging = false);
 
 container.addEventListener("mousemove", (e) => {
   if (!dragging) return;
-
   x = e.clientX - startX;
   y = e.clientY - startY;
-
-  update();
+  applyBounds();
 });
 
-// 📱 TOUCH PAN
+// 📱 TOUCH
 container.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX - x;
   startY = e.touches[0].clientY - y;
@@ -90,13 +103,41 @@ container.addEventListener("touchstart", (e) => {
 container.addEventListener("touchmove", (e) => {
   x = e.touches[0].clientX - startX;
   y = e.touches[0].clientY - startY;
-  update();
+  applyBounds();
 });
+
+// 🚧 BOUNDARY LOGIC
+function applyBounds() {
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+
+  const mapWidth = map.clientWidth * scale;
+  const mapHeight = map.clientHeight * scale;
+
+  // Limit X
+  if (mapWidth > containerWidth) {
+    x = Math.min(0, Math.max(x, containerWidth - mapWidth));
+  } else {
+    x = (containerWidth - mapWidth) / 2;
+  }
+
+  // Limit Y
+  if (mapHeight > containerHeight) {
+    y = Math.min(0, Math.max(y, containerHeight - mapHeight));
+  } else {
+    y = (containerHeight - mapHeight) / 2;
+  }
+
+  update();
+}
 
 // 🔄 APPLY TRANSFORM
 function update() {
   map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
+
+// Run once on load
+window.onload = applyBounds;
 </script>
 
 </body>
