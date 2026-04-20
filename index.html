@@ -1,33 +1,103 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Simple Map</title>
+  <title>Interactive Map</title>
   <style>
     body {
       margin: 0;
+      overflow: hidden;
     }
 
-    .map {
-      width: 100%;
+    #container {
+      width: 100vw;
       height: 100vh;
-      overflow: auto; /* enables scrolling (pan) */
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
     }
 
     img {
-      width: 1500px; /* make bigger than screen so you can scroll */
-      display: block;
+      width: 100%;
+      transform-origin: 0 0;
+      user-select: none;
+      pointer-events: none;
     }
   </style>
 </head>
 
 <body>
 
-<div class="map">
-  
-  <img src="Drusilla's_Map.png">
+<div id="container">
+  <img id="map" src="Drusilla's_Map.png">
 </div>
+
+<script>
+let scale = 1;
+let x = 0;
+let y = 0;
+let startX, startY;
+let dragging = false;
+
+const map = document.getElementById("map");
+const container = document.getElementById("container");
+
+// 🖱️ MOUSE ZOOM
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
+
+  const zoomSpeed = 0.001;
+  scale += e.deltaY * -zoomSpeed;
+
+  scale = Math.min(Math.max(1, scale), 4);
+
+  update();
+});
+
+// 🖱️ DRAG TO PAN
+container.addEventListener("mousedown", (e) => {
+  dragging = true;
+  container.style.cursor = "grabbing";
+  startX = e.clientX - x;
+  startY = e.clientY - y;
+});
+
+container.addEventListener("mouseup", () => {
+  dragging = false;
+  container.style.cursor = "grab";
+});
+
+container.addEventListener("mouseleave", () => {
+  dragging = false;
+  container.style.cursor = "grab";
+});
+
+container.addEventListener("mousemove", (e) => {
+  if (!dragging) return;
+
+  x = e.clientX - startX;
+  y = e.clientY - startY;
+
+  update();
+});
+
+// 📱 TOUCH PAN
+container.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX - x;
+  startY = e.touches[0].clientY - y;
+});
+
+container.addEventListener("touchmove", (e) => {
+  x = e.touches[0].clientX - startX;
+  y = e.touches[0].clientY - startY;
+  update();
+});
+
+// 🔄 APPLY TRANSFORM
+function update() {
+  map.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+</script>
 
 </body>
 </html>
